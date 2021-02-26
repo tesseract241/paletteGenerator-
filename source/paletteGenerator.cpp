@@ -2,7 +2,7 @@
 #include <cmath>
 #include <random>
 #include <vector>
-#include <paletteGenerator--.hpp>
+#include <paletteGenerator.hpp>
 
 void coordinatesFromIndex(const int index, const int edge, int coordinates[]){
     assert(coordinates && "coordinatesFromIndex called with uninitialized coordinates\n");
