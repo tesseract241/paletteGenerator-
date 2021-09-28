@@ -12,10 +12,10 @@ void coordinatesFromIndex(const int index, const int edge, int coordinates[]){
     coordinates[2] = dummy - coordinates[1]*edge;
 }
 
-void rotateColourspace(const int x, const int y, const int z, int outColours[]){
-    outColours[0] = (x + z)/2;
-    outColours[1] = (y + z)/2;
-    outColours[2] = (x + y)/2;
+void rotatecolourspace(const float inColours[], float outColours[]){
+    outColours[0] = (inColours[0] + inColours[2])/2.;
+    outColours[1] = (inColours[1] + inColours[2])/2.;
+    outColours[2] = (inColours[0] + inColours[1])/2.;
 }
 
 int findEdge(int numberOfColours){
@@ -23,12 +23,12 @@ int findEdge(int numberOfColours){
     return int(std::ceil((delta + 1/delta + 1.)/3.));
 }
 
-void generatePalette(int numberOfColours, uint8_t *colours){
+void generatePalette(int numberOfColours, float *colours){
     assert(numberOfColours>0 && "generatePalette called with non-positive numberOfColours");
-    assert(colours && "generatePalette called with uninitialized colors\n");
+    assert(colours && "generatePalette called with uninitialized colours\n");
     int nodesPerSide = findEdge(numberOfColours);
     int skipThreshold = int(std::ceil(nodesPerSide/6.));
-    int nodeSize = 255/(nodesPerSide - 1);
+    float nodeSize = 1./float(nodesPerSide - 1);
     std::random_device rd;
     std::mt19937 gen(rd());
     std::vector<int> randomColoursVector(nodesPerSide*nodesPerSide*nodesPerSide);
@@ -44,18 +44,22 @@ void generatePalette(int numberOfColours, uint8_t *colours){
     }
     int j=0;
     for(int i=0;i<numberOfColours;++i){
-        int indices[3];
+        int indexes[3];
         for( ; ;++j){
-            coordinatesFromIndex(randomColours[j], nodesPerSide, indices);
+            coordinatesFromIndex(randomColours[j], nodesPerSide, indexes);
             if(
-                    std::abs(indices[0]-indices[1]>= skipThreshold) ||
-                    std::abs(indices[1]-indices[2]>= skipThreshold) ||
-                    std::abs(indices[0]-indices[2]>= skipThreshold)
+                    std::abs(indexes[0]-indexes[1]>= skipThreshold) ||
+                    std::abs(indexes[1]-indexes[2]>= skipThreshold) ||
+                    std::abs(indexes[0]-indexes[2]>= skipThreshold)
             ){
                 ++j;
                 break;
             }
         }
-        rotateColourspace(indices[0]*nodeSize, indices[1]*nodeSize, indices[2]*nodeSize, colours + 3*i);
+        float fColours[3];
+        for(int k=0;k<3;++k){
+            fColours[k] = nodeSize * float(indexes[k]);
+        }
+        rotatecolourspace(fColours, colours+ 3*i);
     }
 }
