@@ -9,4 +9,4 @@
 //cubical crystal, the nodes of which are our colours. We skip the nodes on the diagonal, 
 //as they are less visibile according to our model, and eventually convert back to an RGB color model for ease of use.
 
-void generatePalette(int numberOfColours, uint8_t *colours);
+void generatePalette(int numberOfColours, float *colours);
