@@ -12,54 +12,50 @@ void coordinatesFromIndex(const int index, const int edge, int coordinates[]){
     coordinates[2] = dummy - coordinates[1]*edge;
 }
 
-void rotateColorSpace(const float inColors[], float outColors[]){
-    outColors[0] = (inColors[0] + inColors[2])/2.;
-    outColors[1] = (inColors[1] + inColors[2])/2.;
-    outColors[2] = (inColors[0] + inColors[1])/2.;
+void rotateColourspace(const int x, const int y, const int z, int outColours[]){
+    outColours[0] = (x + z)/2;
+    outColours[1] = (y + z)/2;
+    outColours[2] = (x + y)/2;
 }
 
-int findEdge(int numberOfColors){
-    float delta = std::cbrt(std::sqrt(27*27*numberOfColors*numberOfColors + 27*4*numberOfColors) + (27*numberOfColors + 2)/2.);
+int findEdge(int numberOfColours){
+    float delta = std::cbrt(std::sqrt(27*27*numberOfColours*numberOfColours + 27*4*numberOfColours) + (27*numberOfColours + 2)/2.);
     return int(std::ceil((delta + 1/delta + 1.)/3.));
 }
 
-void generatePalette(int numberOfColors, float colors[][3]){
-    assert(numberOfColors>0 && "generatePalette called with non-positive numberOfColors");
-    assert(colors && "generatePalette called with uninitialized colors\n");
-    int nodesPerSide = findEdge(numberOfColors);
+void generatePalette(int numberOfColours, uint8_t *colours){
+    assert(numberOfColours>0 && "generatePalette called with non-positive numberOfColours");
+    assert(colours && "generatePalette called with uninitialized colors\n");
+    int nodesPerSide = findEdge(numberOfColours);
     int skipThreshold = int(std::ceil(nodesPerSide/6.));
-    float nodeSize = 1./float(nodesPerSide - 1);
+    int nodeSize = 255/(nodesPerSide - 1);
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::vector<int> randomColorsVector(nodesPerSide*nodesPerSide*nodesPerSide);
+    std::vector<int> randomColoursVector(nodesPerSide*nodesPerSide*nodesPerSide);
     for(int i=0;i<nodesPerSide*nodesPerSide*nodesPerSide;++i){
-        randomColorsVector[i] = i;
+        randomColoursVector[i] = i;
     }
-    int randomColors[nodesPerSide*nodesPerSide*nodesPerSide];
+    int randomColours[nodesPerSide*nodesPerSide*nodesPerSide];
     for(int i=0;i<nodesPerSide*nodesPerSide*nodesPerSide;++i){
-        std::uniform_int_distribution<> distrib(0, randomColorsVector.size() - 1);
+        std::uniform_int_distribution<> distrib(0, randomColoursVector.size() - 1);
         int index = distrib(gen);
-        randomColors[i] = randomColorsVector[index];
-        randomColorsVector.erase(randomColorsVector.begin() + index);
+        randomColours[i] = randomColoursVector[index];
+        randomColoursVector.erase(randomColoursVector.begin() + index);
     }
     int j=0;
-    for(int i=0;i<numberOfColors;++i){
-        int indexes[3];
+    for(int i=0;i<numberOfColours;++i){
+        int indices[3];
         for( ; ;++j){
-            coordinatesFromIndex(randomColors[j], nodesPerSide, indexes);
+            coordinatesFromIndex(randomColours[j], nodesPerSide, indices);
             if(
-                    std::abs(indexes[0]-indexes[1]>= skipThreshold) ||
-                    std::abs(indexes[1]-indexes[2]>= skipThreshold) ||
-                    std::abs(indexes[0]-indexes[2]>= skipThreshold)
+                    std::abs(indices[0]-indices[1]>= skipThreshold) ||
+                    std::abs(indices[1]-indices[2]>= skipThreshold) ||
+                    std::abs(indices[0]-indices[2]>= skipThreshold)
             ){
                 ++j;
                 break;
             }
         }
-        float fColors[3];
-        for(int k=0;k<3;++k){
-            fColors[k] = nodeSize * float(indexes[k]);
-        }
-        rotateColorSpace(fColors, colors[i]);
+        rotateColourspace(indices[0]*nodeSize, indices[1]*nodeSize, indices[2]*nodeSize, colours + 3*i);
     }
 }
